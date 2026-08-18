@@ -1,16 +1,16 @@
-{
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "typing-practice",
-  "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-08-18",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "[
-nodejs_compat"
-d1_databases"binding": "DB",
-      "database_name": "typing-ranking-db",
-      "database_id": "656f7f8f-0a05-4169-9ecb-c6cf14a80411"
-    }
-  ]
+﻿{
+    "pages_build_output_dir":  "./dist",
+    "name":  "typing-practice",
+    "compatibility_date":  "2026-08-18",
+    "compatibility_flags":  [
+                                "nodejs_compat"
+                            ],
+    "d1_databases":  [
+                         {
+                             "database_name":  "typing-ranking-db",
+                             "database_id":  "656f7f8f-0a05-4169-9ecb-c6cf14a80411",
+                             "binding":  "DB"
+                         }
+                     ],
+    "$schema":  "./node_modules/wrangler/config-schema.json"
 }
