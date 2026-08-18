@@ -1,0 +1,26 @@
+{
+  "name": "typing-practice-v9",
+  "private": true,
+  "version": "9.0.0",
+  "type": "module",
+  "scripts": {
+    "prepare:words": "node scripts/generate-english.mjs",
+    "dev": "npm run prepare:words && vite",
+    "build": "npm run prepare:words && vite build",
+    "preview": "vite preview",
+    "japanese:import": "node scripts/import-jmdict.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest",
+    "wanakana": "^5.3.1",
+    "wordlist-english": "^1.2.1"
+  },
+  "devDependencies": {
+    "wrangler": "latest",
+    "@scriptin/jmdict-simplified-loader": "^3.6.1"
+  }
+}
