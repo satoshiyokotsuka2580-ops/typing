@@ -12,7 +12,7 @@ export async function onRequestGet({ request, env }) {
   const { results = [] } = await env.DB.prepare(`
     SELECT id, username, mode, level, duration, kps, words, accuracy, created_at
     FROM rankings WHERE mode = ? AND level = ? AND duration = ?
-    ORDER BY created_at DESC LIMIT 200
+    ORDER BY words DESC, kps DESC, created_at ASC LIMIT 200
   `).bind(mode, level, duration).all();
   return json({ results });
 }
