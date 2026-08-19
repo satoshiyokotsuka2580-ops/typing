@@ -1,10 +1,12 @@
-TYPE//LAB v11 update files
+TYPE//LAB v12 Esc behavior update
 
-Copy src and functions into the existing project and overwrite files.
-This update does not contain public/data/japanese.json, so your generated 15,000-word JMdict data is preserved.
+Overwrite these files in the current project:
+- src/App.jsx
+- src/styles.css
 
-Rules:
-- 1 mistake: remaining time -1 second and combo reset
-- Every 20 consecutive correct keypresses: remaining time +1 second and combo count resets
-- Ranking: completed word count only
-- key/s remains visible during play and results
+New behavior:
+- During play, Esc stops the current run and opens the ready screen.
+- Current typing result, elapsed time, remaining time changes, mistakes, combo, and completed words are reset.
+- Mode, level, and selected duration are preserved.
+- Press Enter on the ready screen to restart from the beginning.
+- Press Esc on the ready screen to return to the settings screen.
