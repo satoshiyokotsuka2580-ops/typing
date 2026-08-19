@@ -20,14 +20,15 @@ function Ranking({records,mode,level,duration}){
 
 export default function App(){
  const [screen,setScreen]=useState("home"),[mode,setMode]=useState("english"),[level,setLevel]=useState("beginner"),[duration,setDuration]=useState(60),[data,setData]=useState({english:{},japanese:{}}),[queue,setQueue]=useState([]),[idx,setIdx]=useState(0),[typed,setTyped]=useState(""),[time,setTime]=useState(60),[elapsedSeconds,setElapsedSeconds]=useState(0),[correct,setCorrect]=useState(0),[keys,setKeys]=useState(0),[mistakes,setMistakes]=useState(0),[streak,setStreak]=useState(0),[completed,setCompleted]=useState(0),[records,setRecords]=useState({}),[rankingLoading,setRankingLoading]=useState(false),[saveError,setSaveError]=useState(""),[joinRanking,setJoinRanking]=useState(false),[username,setUsername]=useState(""),[resultSaved,setResultSaved]=useState(false);
- const inputRef=useRef(),completeTimerRef=useRef(null),typedRef=useRef(""),streakRef=useRef(0);
+ const inputRef=useRef(),completeTimerRef=useRef(null),typedRef=useRef(""),streakRef=useRef(0),keydownRef=useRef(null);
  useEffect(()=>{Promise.all([fetch("/data/english.json").then(r=>r.json()),fetch("/data/japanese.json").then(r=>r.json())]).then(([english,japanese])=>setData({english,japanese}));try{setUsername(localStorage.getItem(STORE)||"")}catch{}},[]);
- useEffect(()=>{if(screen!=="playing")return;inputRef.current?.focus();const id=setInterval(()=>{setElapsedSeconds(n=>n+1);setTime(t=>{if(t<=1){setScreen("result");return 0}return t-1})},1000);return()=>clearInterval(id)},[screen]);
+ useEffect(()=>{if(screen!=="playing")return;const id=setInterval(()=>{setElapsedSeconds(n=>n+1);setTime(t=>{if(t<=1){setScreen("result");return 0}return t-1})},1000);return()=>clearInterval(id)},[screen]);
  useEffect(()=>{
   const handleGlobalKey=(event)=>{
-   if(screen==="ready"&&event.key==="Enter"){event.preventDefault();beginGame()}
-   if(screen==="ready"&&event.key==="Escape"){event.preventDefault();setScreen("home")}
-   if(screen==="playing"&&event.key==="Escape"){event.preventDefault();abortGame()}
+   if(screen==="ready"&&event.key==="Enter"){event.preventDefault();beginGame();return}
+   if(screen==="ready"&&event.key==="Escape"){event.preventDefault();setScreen("home");return}
+   if(screen==="playing"&&event.key==="Escape"){event.preventDefault();abortGame();return}
+   if(screen==="playing")keydownRef.current?.(event)
   };
   window.addEventListener("keydown",handleGlobalKey);
   return()=>window.removeEventListener("keydown",handleGlobalKey);
@@ -39,7 +40,7 @@ export default function App(){
   clearTimeout(completeTimerRef.current);setQueue(shuffle(pool));setIdx(0);typedRef.current="";setTyped("");setTime(duration);setElapsedSeconds(0);setCorrect(0);setKeys(0);setMistakes(0);streakRef.current=0;setStreak(0);setCompleted(0);
  }
  function prepareGame(){if(!pool.length)return;setJoinRanking(false);setResultSaved(false);setSaveError("");resetGameState();setScreen("ready")}
- function beginGame(){if(screen!=="ready")return;setScreen("playing");setTimeout(()=>inputRef.current?.focus(),0)}
+ function beginGame(){if(screen!=="ready")return;setScreen("playing")}
  function abortGame(){clearTimeout(completeTimerRef.current);resetGameState();setScreen("ready")}
  function start(){prepareGame()}
  function saveRanking(){
@@ -59,7 +60,7 @@ export default function App(){
   if(nextStreak>=20){streakRef.current=0;setStreak(0);setTime(t=>t+1)}
   else{streakRef.current=nextStreak;setStreak(nextStreak)}
  }
- function next(){clearTimeout(completeTimerRef.current);typedRef.current="";setCompleted(n=>n+1);setTyped("");if(idx+1>=queue.length){setQueue(shuffle(pool));setIdx(0)}else setIdx(n=>n+1);setTimeout(()=>inputRef.current?.focus(),0)}
+ function next(){clearTimeout(completeTimerRef.current);typedRef.current="";setCompleted(n=>n+1);setTyped("");if(idx+1>=queue.length){setQueue(shuffle(pool));setIdx(0)}else setIdx(n=>n+1)}
  function keydown(e){
   if(e.key==="Backspace"){e.preventDefault();clearTimeout(completeTimerRef.current);typedRef.current=typedRef.current.slice(0,-1);setTyped(typedRef.current);return}
   if(e.ctrlKey||e.altKey||e.metaKey||e.key.length!==1)return;
@@ -85,11 +86,13 @@ export default function App(){
    completeTimerRef.current=setTimeout(next,hasLonger?260:70);
   }
  }
- const converted=mode==="japanese"?toHiragana(typed,{IMEMode:true}):typed,done=[...(mode==="japanese"?converted.replace(/[a-z' -]+$/i,""):typed)].length;
- return <main><div className="glow a"/><div className="glow b"/><div className="shell"><header><button className="brand" onClick={()=>setScreen("home")}><i><Keyboard/></i><span><b>TYPE//LAB</b><small>Typing Studio v12</small></span></button><div className="status"><i/>Cloudflare Ready</div></header>
+ keydownRef.current=keydown;
+ const converted=useMemo(()=>mode==="japanese"?toHiragana(typed,{IMEMode:true}):typed,[mode,typed]);
+ const done=useMemo(()=>[...(mode==="japanese"?converted.replace(/[a-z' -]+$/i,""):typed)].length,[mode,converted,typed]);
+ return <main><div className="glow a"/><div className="glow b"/><div className="shell"><header><button className="brand" onClick={()=>setScreen("home")}><i><Keyboard/></i><span><b>TYPE//LAB</b><small>Typing Studio v13</small></span></button><div className="status"><i/>Cloudflare Ready</div></header>
  {screen==="home"&&<section className="home"><div className="hero"><div className="badge"><Sparkles size={14}/>{total.toLocaleString()}語をレベル別に収録</div><h1>指先のスピードを、<br/><em>次のレベルへ。</em></h1><p>ミスで残り時間が1秒減少。正しいキーを20回連続入力するたびに1秒追加されます。ランキングは入力単語数で競います。</p></div><div className="setup-v3"><div><div className="modes">{[["english",Languages,"英単語"],["japanese",Keyboard,"日本語"]].map(([id,Icon,label])=><button key={id} className={mode===id?"mode selected":"mode"} onClick={()=>setMode(id)}><i><Icon/></i><span><b>{label}</b><small>{(data[id]?.[level]||[]).length.toLocaleString()}語</small></span></button>)}</div><div className="levels">{Object.entries(LEVELS).map(([id,x])=><button key={id} className={level===id?"selected":""} onClick={()=>setLevel(id)}><b>{x.label}</b><small>{x.desc}</small></button>)}</div></div><aside><h2>TIME LIMIT</h2><div className="times">{DURATIONS.map(s=><button key={s} className={duration===s?"selected":""} onClick={()=>setDuration(s)}>{s}s</button>)}</div><hr/><div className="best"><span>問題数</span><b>{pool.length.toLocaleString()}語</b></div><button className="primary" onClick={prepareGame} disabled={!pool.length}>練習をスタート</button></aside></div>{rankingLoading?<div className="ranking empty">ランキングを読み込み中...</div>:<Ranking records={records} mode={mode} level={level} duration={duration}/>}</section>}
  {screen==="ready"&&<section className="ready-screen"><div className="ready-card"><div className="ready-icon"><Keyboard size={38}/></div><small>READY / {MODES[mode]}・{LEVELS[level].label}・{duration}秒</small><h2>指をホームポジションへ</h2><p>準備ができたらEnterキーを押してください。キーを押した瞬間から計測を開始します。</p><div className="ready-rule"><span>ミス</span><b>-1秒</b><span>20回連続正解</span><b>+1秒</b></div><div className="enter-key"><LogIn size={18}/><kbd>Enter</kbd><span>でスタート</span></div><button className="ready-back" onClick={()=>setScreen("home")}>設定画面へ戻る（Esc）</button></div></section>}
- {screen==="playing"&&item&&<section className="play" onClick={()=>inputRef.current?.focus()}><div className="stats"><Stat icon={Clock3} label="残り時間" value={time} suffix="sec"/><Stat icon={Zap} label="入力速度" value={kps.toFixed(2)} suffix="key/s"/><Stat icon={Target} label="連続入力" value={streak} suffix="/ 20"/><Stat icon={Activity} label="完了" value={completed} suffix="語"/></div><div className="progress"><i style={{width:`${Math.min(100,Math.max(0,time/duration*100))}%`}}/></div><div className="typing-card"><small>{LEVELS[level].label} / {MODES[mode]}</small>{mode==="japanese"&&<h3>{item.display}</h3>}<div className="target">{[...target].map((c,i)=><span key={i} className={i<done?"done":i===done?"current":""}>{c}</span>)}</div>{mode==="japanese"&&<div className="raw">{typed||"..."}<span> → {converted||"..."}</span></div>}<input ref={inputRef} value="" onKeyDown={keydown} onChange={()=>{}} autoCapitalize="off" autoCorrect="off" autoComplete="off" spellCheck={false}/><p>間違ったキーは入力欄へ反映されません</p></div><div className="under"><span>ミス: {mistakes}（1回につき -1秒） ／ 20コンボで +1秒</span><button onClick={e=>{e.stopPropagation();abortGame()}}>準備画面へ（Esc）</button></div></section>}
+ {screen==="playing"&&item&&<section className="play"><div className="stats"><Stat icon={Clock3} label="残り時間" value={time} suffix="sec"/><Stat icon={Zap} label="入力速度" value={kps.toFixed(2)} suffix="key/s"/><Stat icon={Target} label="連続入力" value={streak} suffix="/ 20"/><Stat icon={Activity} label="完了" value={completed} suffix="語"/></div><div className="progress"><i style={{width:`${Math.min(100,Math.max(0,time/duration*100))}%`}}/></div><div className="typing-card"><small>{LEVELS[level].label} / {MODES[mode]}</small>{mode==="japanese"&&<h3>{item.display}</h3>}<div className="target">{[...target].map((c,i)=><span key={i} className={i<done?"done":i===done?"current":""}>{c}</span>)}</div>{mode==="japanese"&&<div className="raw">{typed||"..."}<span> → {converted||"..."}</span></div>}<input ref={inputRef} value="" onChange={()=>{}} tabIndex={-1} aria-hidden="true"/><p>間違ったキーは入力欄へ反映されません</p></div><div className="under"><span>ミス: {mistakes}（1回につき -1秒） ／ 20コンボで +1秒</span><button onClick={e=>{e.stopPropagation();abortGame()}}>準備画面へ（Esc）</button></div></section>}
  {screen==="result"&&<section className="result"><div className="award"><Award size={42}/></div><small>SESSION COMPLETE</small><h2>トレーニング完了！</h2><div className="result-card"><strong>{completed}</strong><small>COMPLETED WORDS</small><div className="stats"><Stat icon={Zap} label="入力速度" value={kps.toFixed(2)} suffix="key/s"/><Stat icon={Target} label="正答率" value={accuracy} suffix="%"/><Stat icon={Activity} label="ミス" value={mistakes}/></div><div className="result-register"><label className="rank-option"><input type="checkbox" checked={joinRanking} disabled={resultSaved} onChange={e=>setJoinRanking(e.target.checked)}/><span>この結果をランキングに記録する</span></label>{joinRanking&&<><label className="username"><UserRound size={16}/><input value={username} disabled={resultSaved} onChange={e=>setUsername(e.target.value.slice(0,20))} placeholder="ユーザーネーム" maxLength={20}/></label><button className="save-score" disabled={!username.trim()||resultSaved} onClick={saveRanking}>{resultSaved?"記録しました":"ランキングへ記録"}</button></>}{saveError&&<div className="save-error">{saveError}</div>}{!joinRanking&&<div className="not-saved">記録せずに終了できます</div>}</div></div>{rankingLoading?<div className="ranking empty">ランキングを読み込み中...</div>:<Ranking records={records} mode={mode} level={level} duration={duration}/>}<div className="actions"><button className="primary" onClick={start}><RotateCcw size={16}/>もう一度</button><button onClick={()=>setScreen("home")}>ホームへ</button></div></section>}
  <footer><span>TYPE LAB / 2026</span><span>{total.toLocaleString()} WORDS</span></footer></div></main>
 }

@@ -1,12 +1,14 @@
-TYPE//LAB v12 Esc behavior update
+TYPE//LAB v13 performance update
 
-Overwrite these files in the current project:
+Overwrite these files in the existing project:
 - src/App.jsx
 - src/styles.css
+- src/romajiEngine.js
 
-New behavior:
-- During play, Esc stops the current run and opens the ready screen.
-- Current typing result, elapsed time, remaining time changes, mistakes, combo, and completed words are reset.
-- Mode, level, and selected duration are preserved.
-- Press Enter on the ready screen to restart from the beginning.
-- Press Esc on the ready screen to return to the settings screen.
+Optimizations:
+- Direct window keyboard events instead of hidden-input focus processing
+- Cached romaji prefix/completion checks
+- Memoized kana display conversion
+- Reduced expensive backdrop filtering and transitions during play
+- Esc during play returns to ready screen
+- Existing generated JMdict data and D1 configuration are not included or overwritten

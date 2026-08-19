@@ -942,7 +942,7 @@ async function onRequestGet({ request, env: env2 }) {
   const { results = [] } = await env2.DB.prepare(`
     SELECT id, username, mode, level, duration, kps, words, accuracy, created_at
     FROM rankings WHERE mode = ? AND level = ? AND duration = ?
-    ORDER BY created_at DESC LIMIT 200
+    ORDER BY words DESC, kps DESC, created_at ASC LIMIT 200
   `).bind(mode, level, duration).all();
   return json({ results });
 }
@@ -965,7 +965,7 @@ async function onRequestPost({ request, env: env2 }) {
 }
 __name(onRequestPost, "onRequestPost");
 
-// ../.wrangler/tmp/pages-7gQtgD/functionsRoutes-0.7258147736300966.mjs
+// ../.wrangler/tmp/pages-mu3hY6/functionsRoutes-0.9098251895868282.mjs
 var routes = [
   {
     routePath: "/api/rankings",

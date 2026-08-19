@@ -97,12 +97,22 @@ function isComplete(tokens,input,index=0,pos=0,memo=new Map()) {
 
 export function createRomajiModel(reading) {
   const tokens=tokenize(reading);
+  const prefixCache=new Map(),completeCache=new Map(),longerCache=new Map();
   return {
-    isPrefix(input) { return canMatch(tokens,input.toLowerCase()); },
-    isComplete(input) { return isComplete(tokens,input.toLowerCase()); },
+    isPrefix(input) {
+      const key=input.toLowerCase();
+      if(!prefixCache.has(key))prefixCache.set(key,canMatch(tokens,key));
+      return prefixCache.get(key);
+    },
+    isComplete(input) {
+      const key=input.toLowerCase();
+      if(!completeCache.has(key))completeCache.set(key,isComplete(tokens,key));
+      return completeCache.get(key);
+    },
     hasLonger(input) {
-      const lower=input.toLowerCase();
-      return "abcdefghijklmnopqrstuvwxyz'".split("").some(c=>canMatch(tokens,lower+c));
+      const key=input.toLowerCase();
+      if(!longerCache.has(key))longerCache.set(key,"abcdefghijklmnopqrstuvwxyz'".split("").some(c=>canMatch(tokens,key+c)));
+      return longerCache.get(key);
     }
   };
 }
